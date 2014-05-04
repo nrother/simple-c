@@ -13,17 +13,7 @@ namespace SimpleC.Parsing
     /// Parser for the SimpleC language.
     /// </summary>
     class Parser
-    {
-        /*
-         * Some general notes: The part "implementing the parser" wasn't handled
-         * in my lecuture until now. So this code has no theoretical background
-         * is is most certianly crap. I should improve this as my lecture advances
-         * or try to use something like Coco/R or Bison the generate the parser.
-         * 
-         * This stuff here should be enough for some simple math expression, but
-         * please, don't try to take it any further.
-         */
-        
+    {   
         public Token[] Tokens { get; private set; }
 
         private int readingPosition;
@@ -39,18 +29,28 @@ namespace SimpleC.Parsing
         {
             var rootNode = new StatementSequenceNode();
 
-            //This only supports (multiple) math expressions, seperated by semicolons. (See note above)
-
             while (!eof())
             {
+                //at the top level there can only be two things:
+                //either a variable declaration in the style of "int {name} = {value};"
+                //or a function declaration in the style of "int {name}({args})\{{body}\}"
+                //in both cases we must read the token sequence int/identifier
+
+                KeywordToken typeToken = readKeyword(KeywordType.Int);
+                IdentifierToken identifierToken = (IdentifierToken)readToken(typeof(IdentifierToken));
+                
                 //no switch(typeof()) in C# :(
-                Type type = peekType();
-                if (type.IsAssignableFrom(typeof(NumberLiteralToken))) //we are starting a math expression, without braces. Read till end of statement.
+                Token operatorOrBrace = readToken(typeof(Token));
+                if (operatorOrBrace.GetType().IsAssignableFrom(typeof(OperatorToken)) && ((OperatorToken)operatorOrBrace).OperatorType == OperatorType.Assignment) //variable declaration
                 {
-                    //TODO: INWORK
+                    
+                }
+                else if(operatorOrBrace.GetType().IsAssignableFrom(typeof(OpenBraceToken)) && ((OpenBraceToken)operatorOrBrace).BraceType == BraceType.Round) //function definition
+                {
+
                 }
                 else
-                    throw new Exception("The parser encountered an unknown token type.");
+                    throw new Exception("The parser encountered an unexpected token.");
             }
 
             return rootNode;
@@ -60,10 +60,7 @@ namespace SimpleC.Parsing
         {
             foreach (var t in expectedTypes)
             {
-                if (t.IsAssignableFrom(peekType()))
-                    yield return next();
-                else
-                    throw new ParsingException("Unexpected token " + peek());
+                yield return readToken(t);
             }
         }
 
@@ -77,6 +74,22 @@ namespace SimpleC.Parsing
         {
             while (!eof() && !typeof(StatementSperatorToken).IsAssignableFrom(peekType()))
                 yield return next();
+        }
+
+        private Token readToken(Type expectedType)
+        {
+            if (expectedType.IsAssignableFrom(peekType()))
+                return next();
+            else
+                throw new ParsingException("Unexpected token " + peek());
+        }
+
+        private KeywordToken readKeyword(KeywordType expectedKeyword)
+        {
+            var tk = (KeywordToken)readToken(typeof(KeywordToken));
+            if (tk.KeywordType != expectedKeyword)
+                throw new ParsingException("Unexpected keyword" + expectedKeyword);
+            return tk;
         }
 
         private Token peek()

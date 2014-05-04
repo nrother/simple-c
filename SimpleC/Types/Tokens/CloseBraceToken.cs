@@ -11,8 +11,20 @@ namespace SimpleC.Types.Tokens
         public CloseBraceToken(string content)
             : base(content)
         {
-            if (content != ")")
-                throw new ArgumentException("The content is no closing brace.", "content");
+            switch (content)
+            {
+                case ")":
+                    BraceType = BraceType.Round;
+                    break;
+                case "]":
+                    BraceType = BraceType.Square;
+                    break;
+                case "}":
+                    BraceType = BraceType.Curly;
+                    break;
+                default:
+                    throw new ArgumentException("The content is no closing brace.", "content");
+            }
         }
     }
 }

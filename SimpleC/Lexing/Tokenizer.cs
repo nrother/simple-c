@@ -33,12 +33,16 @@ namespace SimpleC.Lexing
 
             while (!eof())
             {
-                skip(CharType.WhiteSpace); //white space has no meaning besides sperating tokens (we not python!)
+                skip(CharType.WhiteSpace); //white space has no meaning besides sperating tokens (we're not python!)
                 switch (peekType())
                 {
                     case CharType.Alpha: //start of identifier
                         readToken(builder, CharType.AlphaNumeric);
-                        tokens.Add(new IdentifierToken(builder.ToString()));
+                        string s = builder.ToString();
+                        if (KeywordToken.IsKeyword(s))
+                            tokens.Add(new KeywordToken(s));
+                        else
+                            tokens.Add(new IdentifierToken(s));
                         builder.Clear();
                         break;
                     case CharType.Numeric: //start of number literal
@@ -127,13 +131,20 @@ namespace SimpleC.Lexing
                 case '=':
                     return CharType.Operator;
                 case '(':
+                case '[':
+                case '{':
                     return CharType.OpenBrace;
                 case ')':
+                case ']':
+                case '}':
                     return CharType.CloseBrace;
                 case ',':
                     return CharType.ArgSeperator;
                 case ';':
                     return CharType.StatementSeperator;
+                case '\r': //\r and \n have UnicodeCategory.Control, not LineSeperator...
+                case '\n':
+                    return CharType.NewLine;
             }
 
             //than the categories
@@ -141,7 +152,7 @@ namespace SimpleC.Lexing
             {
                 case UnicodeCategory.DecimalDigitNumber:
                     return CharType.Numeric;
-                case UnicodeCategory.LineSeparator:
+                case UnicodeCategory.LineSeparator: //just in case... (see above)
                     return CharType.NewLine;
                 case UnicodeCategory.ParagraphSeparator:
                 case UnicodeCategory.LowercaseLetter:

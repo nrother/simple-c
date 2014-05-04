@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace SimpleC.Types.AstNodes
 {
-    class MathExpressionNode
+    class ExpressionNode
     {
-        protected MathExpressionNode()
+        protected ExpressionNode()
         { }
 
-        static MathExpressionNode CreateFromTokens(IEnumerable<Token> tokens)
+        static ExpressionNode CreateFromTokens(IEnumerable<Token> tokens)
         {
-
+            return null;
         }
     }
 }

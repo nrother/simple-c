@@ -11,8 +11,20 @@ namespace SimpleC.Types.Tokens
         public OpenBraceToken(string content)
             : base(content)
         {
-            if (content != "(")
-                throw new ArgumentException("The content is no opening brace.", "content");
+            switch (content)
+            {
+                case "(":
+                    BraceType = BraceType.Round;
+                    break;
+                case "[":
+                    BraceType = BraceType.Square;
+                    break;
+                case "{":
+                    BraceType = BraceType.Curly;
+                    break;
+                default:
+                    throw new ArgumentException("The content is no opening brace.", "content");
+            }
         }
     }
 }

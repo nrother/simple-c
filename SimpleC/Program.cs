@@ -12,7 +12,13 @@ namespace SimpleC
     {
         static void Main(string[] args)
         {
-            string code = @"5+7;";
+            string code = @"
+int a = 5;
+
+int main()
+{
+    a = 6;
+}";
 
             var lexer = new Tokenizer(code);
             var tokens = lexer.Tokenize();

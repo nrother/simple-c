@@ -40,11 +40,11 @@ namespace SimpleC.Lexing
         /// </summary>
         Operator = 0x10,
         /// <summary>
-        /// (.
+        /// (,[,{.
         /// </summary>
         OpenBrace = 0x20,
         /// <summary>
-        /// ).
+        /// ),],}.
         /// </summary>
         CloseBrace = 0x40,
         /// <summary>
