@@ -4,14 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimpleC.Types
+namespace SimpleC.Types.Tokens
 {
-    enum KeywordType
+    enum BraceType
     {
-        Int,
-        Void,
-        Return,
-        If,
-        While,
+        Round,
+        Square,
+        Curly
     }
 }

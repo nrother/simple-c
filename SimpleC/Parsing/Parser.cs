@@ -32,20 +32,20 @@ namespace SimpleC.Parsing
             while (!eof())
             {
                 //at the top level there can only be two things:
-                //either a variable declaration in the style of "int {name} = {value};"
+                //either a variable declaration in the style of "int {name}[ = {value}];"
                 //or a function declaration in the style of "int {name}({args})\{{body}\}"
                 //in both cases we must read the token sequence int/identifier
 
                 KeywordToken typeToken = readKeyword(KeywordType.Int);
-                IdentifierToken identifierToken = (IdentifierToken)readToken(typeof(IdentifierToken));
+                IdentifierToken identifierToken = readToken<IdentifierToken>();
                 
                 //no switch(typeof()) in C# :(
-                Token operatorOrBrace = readToken(typeof(Token));
-                if (operatorOrBrace.GetType().IsAssignableFrom(typeof(OperatorToken)) && ((OperatorToken)operatorOrBrace).OperatorType == OperatorType.Assignment) //variable declaration
+                Token lookahed = peek();
+                if (lookahed is OperatorToken && (((OperatorToken)lookahed).OperatorType == OperatorType.Assignment) || lookahed is StatementSperatorToken) //variable declaration
                 {
-                    
+                    rootNode.AddStatement(new VariableDeclarationNode(typeToken, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
                 }
-                else if(operatorOrBrace.GetType().IsAssignableFrom(typeof(OpenBraceToken)) && ((OpenBraceToken)operatorOrBrace).BraceType == BraceType.Round) //function definition
+                else if(lookahed is OpenBraceToken && (((OpenBraceToken)lookahed).BraceType == BraceType.Round)) //function definition
                 {
 
                 }
@@ -60,33 +60,35 @@ namespace SimpleC.Parsing
         {
             foreach (var t in expectedTypes)
             {
-                yield return readToken(t);
+                if (!t.IsAssignableFrom(peek().GetType()))
+                    throw new ParsingException("Unexpected token");
+                yield return next();
             }
         }
 
         private IEnumerable<Token> readUntilClosingBrace()
         {
-            while (!eof() && !typeof(CloseBraceToken).IsAssignableFrom(peekType()))
+            while (!eof() && !(peek() is CloseBraceToken))
                 yield return next();
         }
 
         private IEnumerable<Token> readUntilStatementSeperator()
         {
-            while (!eof() && !typeof(StatementSperatorToken).IsAssignableFrom(peekType()))
+            while (!eof() && !(peek() is StatementSperatorToken))
                 yield return next();
         }
 
-        private Token readToken(Type expectedType)
+        private TExpected readToken<TExpected>() where TExpected : Token
         {
-            if (expectedType.IsAssignableFrom(peekType()))
-                return next();
+            if (peek() is TExpected)
+                return (TExpected)next();
             else
                 throw new ParsingException("Unexpected token " + peek());
         }
 
         private KeywordToken readKeyword(KeywordType expectedKeyword)
         {
-            var tk = (KeywordToken)readToken(typeof(KeywordToken));
+            var tk = readToken<KeywordToken>();
             if (tk.KeywordType != expectedKeyword)
                 throw new ParsingException("Unexpected keyword" + expectedKeyword);
             return tk;
@@ -98,21 +100,11 @@ namespace SimpleC.Parsing
             return Tokens[readingPosition];
         }
 
-        private Type peekType()
-        {
-            return peek().GetType();
-        }
-
         private Token next()
         {
             var ret = peek();
             readingPosition++;
             return ret;
-        }
-
-        private Type nextType()
-        {
-            return next().GetType();
         }
 
         private bool eof()

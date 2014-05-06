@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimpleC.Types
+namespace SimpleC.Types.Tokens
 {
     enum OperatorType
     {

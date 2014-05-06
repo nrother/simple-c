@@ -6,14 +6,22 @@ using System.Threading.Tasks;
 
 namespace SimpleC.Types.AstNodes
 {
-    class ExpressionNode
+    abstract class ExpressionNode
     {
         protected ExpressionNode()
         { }
 
-        static ExpressionNode CreateFromTokens(IEnumerable<Token> tokens)
+        public static ExpressionNode CreateFromTokens(IEnumerable<Token> tokens)
         {
-            return null;
+            if (tokens.Count() == 0)
+                return null;
+
+            //Now we need to parse the given tokens into a expression tree.
+        }
+
+        public static ExpressionNode CreateConstantExpression(int value)
+        {
+            return new NumberLiteralNode(value);
         }
     }
 }

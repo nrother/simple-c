@@ -44,6 +44,9 @@
     <Compile Include="EnumExtensions.cs" />
     <Compile Include="Lexing\CharType.cs" />
     <Compile Include="Lexing\Tokenizer.cs" />
+    <Compile Include="Types\AstNodes\BinaryOperationNode.cs" />
+    <Compile Include="Types\AstNodes\ExpressionOperationType.cs" />
+    <Compile Include="Parsing\ExpressionParser.cs" />
     <Compile Include="Parsing\Parser.cs" />
     <Compile Include="Parsing\ParsingException.cs" />
     <Compile Include="Program.cs" />
@@ -51,11 +54,13 @@
     <Compile Include="Types\AstNode.cs" />
     <Compile Include="Types\AstNodes\FunctionNode.cs" />
     <Compile Include="Types\AstNodes\ExpressionNode.cs" />
+    <Compile Include="Types\AstNodes\NumberLiteralNode.cs" />
     <Compile Include="Types\AstNodes\StatementSequenceNode.cs" />
+    <Compile Include="Types\AstNodes\UnaryOperationNode.cs" />
     <Compile Include="Types\AstNodes\VariableDeclarationNode.cs" />
-    <Compile Include="Types\BraceType.cs" />
-    <Compile Include="Types\KeywordType.cs" />
-    <Compile Include="Types\OperatorType.cs" />
+    <Compile Include="Types\Tokens\BraceType.cs" />
+    <Compile Include="Types\Tokens\KeywordType.cs" />
+    <Compile Include="Types\Tokens\OperatorType.cs" />
     <Compile Include="Types\Token.cs" />
     <Compile Include="Types\Tokens\ArgSeperatorToken.cs" />
     <Compile Include="Types\Tokens\BraceToken.cs" />
@@ -66,7 +71,7 @@
     <Compile Include="Types\Tokens\OpenBraceToken.cs" />
     <Compile Include="Types\Tokens\OperatorToken.cs" />
     <Compile Include="Types\Tokens\StatementSperatorToken.cs" />
-    <Compile Include="Types\VariableType.cs" />
+    <Compile Include="Types\Tokens\VariableType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
