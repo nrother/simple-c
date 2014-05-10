@@ -21,6 +21,7 @@ namespace SimpleC.Parsing
     {
         private Stack<ExpressionNode> working = new Stack<ExpressionNode>();
         private Stack<ExpressionOperationType> operators = new Stack<ExpressionOperationType>();
+        private Stack<int> arity = new Stack<int>();
 
         //taken from http://en.wikipedia.org/wiki/Operators_in_C_and_C++
         private static readonly Dictionary<ExpressionOperationType, int> operationPrecedence = new Dictionary<ExpressionOperationType, int>()
@@ -65,6 +66,9 @@ namespace SimpleC.Parsing
             { OperatorType.Or, ExpressionOperationType.Or},
         };
 
+        //used to distigush between unary and binary minus
+        private bool lastTokenWasOperatorOrLeftBrace = true; //beginning of input is like a left brace
+
         /// <summary>
         /// Parses the given tokens to an AST.
         /// </summary>
@@ -72,12 +76,18 @@ namespace SimpleC.Parsing
         {
             foreach (var token in tokens)
             {
-                //TODO: Add functions and unary operators
                 if (token is NumberLiteralToken)
+                {
                     working.Push(new NumberLiteralNode(((NumberLiteralToken)token).Number));
+                    lastTokenWasOperatorOrLeftBrace = false;
+                }
                 else if (token is OperatorToken)
                 {
-                    var op = operatorToOperation[((OperatorToken)token).OperatorType];
+                    ExpressionOperationType op;
+                    if (((OperatorToken)token).OperatorType == OperatorType.SubstractNegate) //need to check if binary of unary
+                        op = lastTokenWasOperatorOrLeftBrace ? ExpressionOperationType.Negate : ExpressionOperationType.Substract;
+                    else //normal operator
+                        op = operatorToOperation[((OperatorToken)token).OperatorType];
 
                     //TODO: Do we need to check for assosiativity? Only unary operators and assignments are rtl-assosiativ
                     while (operators.Count != 0 && operationPrecedence[operators.Peek()] > operationPrecedence[op]) //stack empty or only low precendence operators on stack
@@ -85,14 +95,43 @@ namespace SimpleC.Parsing
                         PopOperator();
                     }
                     operators.Push(op);
+                    lastTokenWasOperatorOrLeftBrace = true;
                 }
                 else if (token is OpenBraceToken && ((OpenBraceToken)token).BraceType == BraceType.Round)
+                {
+                    if(working.Peek() is VariableReferenceExpressionNode) //we have a "variable" sitting on top of the op stack, this must be the name of a function to be called. Let's fix this.
+                    {
+                        var variable = (VariableReferenceExpressionNode)working.Pop();
+                        working.Push(new FunctionCallExpressionNode(variable.VariableName));
+                        arity.Push(1);
+                    }
+                    
                     operators.Push(ExpressionOperationType.OpenBrace);
-                else if (token is CloseBraceToken && ((OpenBraceToken)token).BraceType == BraceType.Round)
+                    lastTokenWasOperatorOrLeftBrace = true;
+                }
+                else if (token is CloseBraceToken && ((CloseBraceToken)token).BraceType == BraceType.Round)
                 {
                     while (operators.Peek() != ExpressionOperationType.OpenBrace)
                         PopOperator();
                     operators.Pop(); //pop the opening brace from the stack
+
+                    if(operators.Peek() == ExpressionOperationType.FunctionCall) //function call sitting on top of the stack
+                        PopOperator();
+
+                    lastTokenWasOperatorOrLeftBrace = false;
+                }
+                else if(token is IdentifierToken)
+                {
+                    //this could be a function call, but we would need a lookahead to check for an opening brace.
+                    //just handle this as a variable reference and change it to a function when a open brace is found
+                    working.Push(new VariableReferenceExpressionNode(((IdentifierToken)token).Content));
+                }
+                else if(token is ArgSeperatorToken)
+                {
+                    arity.Push(arity.Pop() + 1); //increase arity on top of the stack
+                    
+                    while (operators.Peek() != ExpressionOperationType.OpenBrace) //pop till the open brace of this function call
+                        PopOperator();
                 }
                 else
                     throw new ParsingException("Found unknown token while parsing expression!");
@@ -112,7 +151,17 @@ namespace SimpleC.Parsing
         private void PopOperator()
         {
             var op = operators.Pop();
-            if (unaryOperators.Contains(op))
+            if(op == ExpressionOperationType.FunctionCall)
+            {
+                //collect the args
+                List<ExpressionNode> args = new List<ExpressionNode>();
+                int functionArity = arity.Pop();
+                for (int i = 0; i < functionArity; i++)
+                    args.Add(working.Pop());
+                //add them to the function call sitting on top of the stack
+                ((FunctionCallExpressionNode)working.Peek()).AddArguments(args);
+            }
+            else if (unaryOperators.Contains(op))
                 working.Push(new UnaryOperationNode(op, working.Pop()));
             else //binary
             {

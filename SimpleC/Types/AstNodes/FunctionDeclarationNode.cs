@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleC.Types.AstNodes
 {
-    class FunctionNode : AstNode
+    class FunctionDeclarationNode : AstNode
     {
     }
 }
