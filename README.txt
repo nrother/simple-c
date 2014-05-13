@@ -13,6 +13,7 @@ virtual machine (VM). There is an interpreter for this code included.
 
 The compiler compiles a small subset of the C syntax. Important exception:
 There is no need to declare functions bevore using them, so no header files :)
+(see below)
 
 Current state
 -------------
@@ -22,12 +23,22 @@ The project is currently in an early state:
 * The code generator is not even started
 * The interpreter is no even started
 
-The parser is probably the most complicated part of the project. I know that there
-are things like yacc/Bison that can generate parsers, but opted for doing it myself,
-I find this more entertaining :)
+Currently the parser seems to be the most complicated thing of the whole project.
+I know that normally yacc/Bison is used to generate the parser, but I'll try to
+implement it on my own (note that this is my first try in writing a parser...).
 
 The code generator should be doable (the lectures script has a nice chapter about it),
 and the interpreter should be really easy...
+
+Limitations
+-----------
+The following limitations are currently active, to simplify the whole thing:
+* No nested variable scopes in if/while/etc. That means, you can not override a name
+  of a variable inside a loop etc. There are only two scopes: Global or function-local
+* You may use functions before declaring them (no header files!). This may not be a limitation...
+* Variables may be used before declared (must must be declared somewhere). This means you should
+  declare all local vairables inside a funtion on top of it, otherwise the compiler will behave as
+  if you did. Maybe this will emit a error later.
 
 Licence
 -------
