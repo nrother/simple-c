@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace SimpleC.Types.AstNodes
 {
-    class FunctionDeclarationNode : AstNode
+    class FunctionDeclarationNode : StatementSequenceNode
     {
+        public string FunctionName { get; private set; }
+
+        public FunctionDeclarationNode(string name)
+        {
+            FunctionName = name;
+        }
     }
 }

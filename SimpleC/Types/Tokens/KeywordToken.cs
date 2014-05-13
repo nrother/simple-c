@@ -8,7 +8,7 @@ namespace SimpleC.Types.Tokens
 {
     class KeywordToken : Token
     {
-        static readonly Dictionary<string, KeywordType> validKeywords = new Dictionary<string, KeywordType>()
+        private static readonly Dictionary<string, KeywordType> validKeywords = new Dictionary<string, KeywordType>()
         {
             { "if", KeywordType.If },
             { "int", KeywordType.Int },
@@ -17,7 +17,22 @@ namespace SimpleC.Types.Tokens
             { "while", KeywordType.While },
         };
 
+        private static readonly Dictionary<KeywordType, VariableType> keywordTypeToVariableType = new Dictionary<KeywordType, VariableType>
+        {
+            { KeywordType.Int, VariableType.Int },
+            { KeywordType.Void, VariableType.Void },
+        };
+
         public KeywordType KeywordType { get; private set; }
+
+        /// <summary>
+        /// Returns true, if this keyword is a keyword
+        /// for a type, false otherwise.
+        /// </summary>
+        public bool IsTypeKeyword
+        {
+            get { return keywordTypeToVariableType.ContainsKey(KeywordType); }
+        }
 
         public KeywordToken(string content)
             : base(content)
@@ -35,6 +50,16 @@ namespace SimpleC.Types.Tokens
         public static bool IsKeyword(string s)
         {
             return validKeywords.ContainsKey(s);
+        }
+
+        /// <summary>
+        /// Returns the assisated VariableType for this keyword,
+        /// if this keyword represents a variable type.
+        /// Throws an excepion otherwise.
+        /// </summary>
+        public VariableType ToVariableType()
+        {
+            return keywordTypeToVariableType[KeywordType];
         }
     }
 }

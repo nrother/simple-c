@@ -16,7 +16,17 @@ namespace SimpleC.Types.AstNodes
             }
         }
 
-        List<AstNode> subNodes = new List<AstNode>();
+        List<AstNode> subNodes;
+
+        public StatementSequenceNode()
+        {
+            subNodes = new List<AstNode>();
+        }
+
+        public StatementSequenceNode(IEnumerable<AstNode> subNodes)
+        {
+            this.subNodes.AddRange(subNodes);
+        }
 
         public void AddStatement(AstNode node)
         {

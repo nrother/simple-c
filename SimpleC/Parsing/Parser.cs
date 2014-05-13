@@ -13,47 +13,64 @@ namespace SimpleC.Parsing
     /// Parser for the SimpleC language.
     /// </summary>
     class Parser
-    {   
+    {
         public Token[] Tokens { get; private set; }
 
         private int readingPosition;
+        private Stack<StatementSequenceNode> scopes;
+
+        private static readonly KeywordType[] typeKeywords = { KeywordType.Int, KeywordType.Void };
 
         public Parser(Token[] tokens)
         {
             this.Tokens = tokens;
 
             readingPosition = 0;
+            scopes = new Stack<StatementSequenceNode>();
         }
 
-        public AstNode ParseToAst()
+        public ProgramNode ParseToAst()
         {
-            var rootNode = new StatementSequenceNode();
+            scopes.Push(new ProgramNode());
 
             while (!eof())
             {
-                //at the top level there can only be two things:
-                //either a variable declaration in the style of "int {name}[ = {value}];"
-                //or a function declaration in the style of "int {name}({args})\{{body}\}"
-                //in both cases we must read the token sequence int/identifier
+                if (peek() is KeywordToken)
+                {
+                    var keyword = (KeywordToken)next();
 
-                KeywordToken typeToken = readKeyword(KeywordType.Int);
-                IdentifierToken identifierToken = readToken<IdentifierToken>();
-                
-                //no switch(typeof()) in C# :(
-                Token lookahed = peek();
-                if (lookahed is OperatorToken && (((OperatorToken)lookahed).OperatorType == OperatorType.Assignment) || lookahed is StatementSperatorToken) //variable declaration
-                {
-                    rootNode.AddStatement(new VariableDeclarationNode(typeToken, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
-                }
-                else if(lookahed is OpenBraceToken && (((OpenBraceToken)lookahed).BraceType == BraceType.Round)) //function definition
-                {
-                    //TODO
-                }
-                else
-                    throw new Exception("The parser encountered an unexpected token.");
+                    if (scopes.Count == 1) //we are a top level, the only valid keywords are variable types, starting a variable or function definition
+                    {
+                        if (!keyword.IsTypeKeyword)
+                        {
+                            var varType = keyword.ToVariableType();
+                            //it must be followed by a identifier:
+                            var name = readToken<IdentifierToken>();
+                            //so see what it is (function or variable):
+                            Token lookahed = peek();
+                            if (lookahed is OperatorToken && (((OperatorToken)lookahed).OperatorType == OperatorType.Assignment) || lookahed is StatementSperatorToken) //variable declaration
+                            {
+                                scopes.Peek().AddStatement(new VariableDeclarationNode(varType, name.Content ,ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                            }
+                            else if (lookahed is OpenBraceToken && (((OpenBraceToken)lookahed).BraceType == BraceType.Round)) //function definition
+                            {
+                                var func = new FunctionDeclarationNode(name.Content);
+                                scopes.Peek().AddStatement(func); //add the function to the old (root) scope...
+                                scopes.Push(func); //...and set it a the new scope!
+                            }
+                            else
+                                throw new Exception("The parser encountered an unexpected token.");
+                        }
+                        else
+                            throw new ParsingException("Found non-type keyword on top level.");
+                    }
+                } //TODO: More keywords, expression in functions!
             }
 
-            return rootNode;
+            if (scopes.Count != 1)
+                throw new ParsingException("The scopes are not correctly nested.");
+
+            return (ProgramNode)scopes.Pop();
         }
 
         private IEnumerable<Token> readTokenSeqence(params Type[] expectedTypes)
@@ -84,14 +101,6 @@ namespace SimpleC.Parsing
                 return (TExpected)next();
             else
                 throw new ParsingException("Unexpected token " + peek());
-        }
-
-        private KeywordToken readKeyword(KeywordType expectedKeyword)
-        {
-            var tk = readToken<KeywordToken>();
-            if (tk.KeywordType != expectedKeyword)
-                throw new ParsingException("Unexpected keyword" + expectedKeyword);
-            return tk;
         }
 
         private Token peek()

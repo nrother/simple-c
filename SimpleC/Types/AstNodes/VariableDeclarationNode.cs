@@ -12,18 +12,20 @@ namespace SimpleC.Types.AstNodes
         public ExpressionNode InitialValueExpression { get; private set; }
         public VariableType VariableType { get; private set; }
 
+        public string VariableName { get; private set; }
+
         private static readonly ExpressionNode DefaultIntValueExpression = ExpressionNode.CreateConstantExpression(0); //the default value for an int is zero (0).
         
         /// <summary>
         /// Creates a new instance of the VariableDeclarationNode class.
         /// </summary>
-        /// <param name="type">A KeywordToken containing the type of the variable.</param>
+        /// <param name="type">The type of the variable.</param>
+        /// <param name="name">The name of the variable.</param>
         /// <param name="initialValue">A expression used to initialise the variable initially or null to use the default value.</param>
-        public VariableDeclarationNode(KeywordToken type, ExpressionNode initialValue)
+        public VariableDeclarationNode(VariableType type, string name, ExpressionNode initialValue)
         {
-            if (type.KeywordType != KeywordType.Int)
-                throw new ArgumentException("No valid type.", "type");
-            VariableType = VariableType.Int;
+            VariableType = type;
+            VariableType = name;
 
             initialValue = initialValue ?? DefaultIntValueExpression;
             InitialValueExpression = initialValue;
