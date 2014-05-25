@@ -62,8 +62,7 @@ namespace SimpleC.Parsing
                                 scopes.Push(func); //...and set it a the new scope!
                                 //Read the argument list
                                 next(); //skip the opening brace
-                                lookahead = peek();
-                                while (!(lookahead is CloseBraceToken && ((CloseBraceToken)lookahead).BraceType == BraceType.Round)) //TODO: Refactor using readUntilClosingBrace?
+                                while (!(peek() is CloseBraceToken && ((CloseBraceToken)peek()).BraceType == BraceType.Round)) //TODO: Refactor using readUntilClosingBrace?
                                 {
                                     var argType = readToken<KeywordToken>();
                                     if (!argType.IsTypeKeyword)
@@ -86,24 +85,41 @@ namespace SimpleC.Parsing
                     }
                     else //we are in a nested scope
                     {
-                        //TODO: Allow Function-local variables!
-                        switch (keyword.KeywordType)
+                        //TODO: Can we avoid the code duplication from above?
+                        if (keyword.IsTypeKeyword) //local variable declaration!
                         {
-                            case KeywordType.Return:
-                                scopes.Peek().AddStatement(new ReturnStatementNode(ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
-                                break;
-                            case KeywordType.If:
-                                var @if = new IfStatementNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
-                                scopes.Peek().AddStatement(@if);
-                                scopes.Push(@if);
-                                break;
-                            case KeywordType.While:
-                                var @while = new WhileLoopNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
-                                scopes.Peek().AddStatement(@while);
-                                scopes.Push(@while);
-                                break;
-                            default:
-                                throw new ParsingException("Unexpected keyword type.");
+                            var varType = keyword.ToVariableType();
+                            //it must be followed by a identifier:
+                            var name = readToken<IdentifierToken>();
+                            //so see what it is (function or variable):
+                            Token lookahead = peek();
+                            if (lookahead is OperatorToken && (((OperatorToken)lookahead).OperatorType == OperatorType.Assignment) || lookahead is StatementSperatorToken) //variable declaration
+                            {
+                                if (lookahead is OperatorToken)
+                                    next(); //skip the "="
+                                scopes.Peek().AddStatement(new VariableDeclarationNode(varType, name.Content, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                            }
+                        }
+                        else
+                        {
+                            switch (keyword.KeywordType)
+                            {
+                                case KeywordType.Return:
+                                    scopes.Peek().AddStatement(new ReturnStatementNode(ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                                    break;
+                                case KeywordType.If:
+                                    var @if = new IfStatementNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
+                                    scopes.Peek().AddStatement(@if);
+                                    scopes.Push(@if);
+                                    break;
+                                case KeywordType.While:
+                                    var @while = new WhileLoopNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
+                                    scopes.Peek().AddStatement(@while);
+                                    scopes.Push(@while);
+                                    break;
+                                default:
+                                    throw new ParsingException("Unexpected keyword type.");
+                            }
                         }
                     }
                 }
@@ -116,7 +132,7 @@ namespace SimpleC.Parsing
                         scopes.Peek().AddStatement(new VariableAssingmentNode(name.Content, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
                     }
                     else //lone expression (incl. function calls!)
-                        scopes.Peek().AddStatement(ExpressionNode.CreateFromTokens(readUntilStatementSeperator()));
+                        scopes.Peek().AddStatement(ExpressionNode.CreateFromTokens(new[]{name}.Concat(readUntilStatementSeperator()))); //don't forget the name here!
                 }
                 else if(peek() is CloseBraceToken)
                 {

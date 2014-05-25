@@ -26,6 +26,7 @@ namespace SimpleC.Parsing
         //taken from http://en.wikipedia.org/wiki/Operators_in_C_and_C++
         private static readonly Dictionary<ExpressionOperationType, int> operationPrecedence = new Dictionary<ExpressionOperationType, int>()
         {    
+            {ExpressionOperationType.OpenBrace, 0},
             { ExpressionOperationType.FunctionCall, 2 },
             { ExpressionOperationType.Negate, 3 },
             { ExpressionOperationType.Not, 3 },
@@ -50,7 +51,7 @@ namespace SimpleC.Parsing
         private static readonly Dictionary<OperatorType, ExpressionOperationType> operatorToOperation = new Dictionary<OperatorType, ExpressionOperationType>()
         {
             { OperatorType.Add, ExpressionOperationType.Add},
-            //{ OperatorType.SubstractNegate, /*not directly converitble, need to check for unary/binray*/},
+            //{ OperatorType.SubstractNegate, /* not directly converitble, need to check for unary/binray */},
             { OperatorType.Multiply, ExpressionOperationType.Multiply},
             { OperatorType.Divide, ExpressionOperationType.Divide},
             { OperatorType.Modulo, ExpressionOperationType.Modulo},
@@ -102,10 +103,11 @@ namespace SimpleC.Parsing
                 }
                 else if (token is OpenBraceToken && ((OpenBraceToken)token).BraceType == BraceType.Round)
                 {
-                    if(working.Peek() is VariableReferenceExpressionNode) //we have a "variable" sitting on top of the op stack, this must be the name of a function to be called. Let's fix this.
+                    if(working.Count > 0 && working.Peek() is VariableReferenceExpressionNode) //we have a "variable" sitting on top of the op stack, this must be the name of a function to be called. Let's fix this.
                     {
                         var variable = (VariableReferenceExpressionNode)working.Pop();
                         working.Push(new FunctionCallExpressionNode(variable.VariableName));
+                        operators.Push(ExpressionOperationType.FunctionCall);
                         arity.Push(1);
                     }
                     
@@ -118,7 +120,7 @@ namespace SimpleC.Parsing
                         PopOperator();
                     operators.Pop(); //pop the opening brace from the stack
 
-                    if(operators.Peek() == ExpressionOperationType.FunctionCall) //function call sitting on top of the stack
+                    if(operators.Count > 0 && operators.Peek() == ExpressionOperationType.FunctionCall) //function call sitting on top of the stack
                         PopOperator();
 
                     lastTokenWasOperatorOrLeftBrace = false;

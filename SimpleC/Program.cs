@@ -16,9 +16,16 @@ namespace SimpleC
             string code = @"
 int a = 5;
 
+int func(int b)
+{
+    int c = (5*b)+7;
+    return c;
+}
+
 int main()
 {
     a = 6;
+    func(4);
     return a*2;
 }";
 
