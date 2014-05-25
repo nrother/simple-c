@@ -74,8 +74,11 @@ namespace SimpleC.Parsing
         /// </summary>
         public ExpressionNode Parse(IEnumerable<Token> tokens)
         {
+            bool sequenceWasEmpty = true;
+            
             foreach (var token in tokens)
             {
+                sequenceWasEmpty = false;
                 if (token is NumberLiteralToken)
                 {
                     working.Push(new NumberLiteralNode(((NumberLiteralToken)token).Number));
@@ -136,6 +139,9 @@ namespace SimpleC.Parsing
                 else
                     throw new ParsingException("Found unknown token while parsing expression!");
             }
+
+            if (sequenceWasEmpty)
+                return null;
 
             //end of tokens, apply all the remaining operators
             while (operators.Count != 0)

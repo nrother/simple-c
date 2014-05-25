@@ -14,9 +14,6 @@ namespace SimpleC.Types.AstNodes
 
         public static ExpressionNode CreateFromTokens(IEnumerable<Token> tokens)
         {
-            if (tokens.Count() == 0)
-                return null;
-
             //Now we need to parse the given tokens into a expression tree.
             return new ExpressionParser().Parse(tokens);
         }

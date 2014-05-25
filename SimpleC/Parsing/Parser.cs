@@ -3,6 +3,7 @@ using SimpleC.Types.AstNodes;
 using SimpleC.Types.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +51,8 @@ namespace SimpleC.Parsing
                             Token lookahead = peek();
                             if (lookahead is OperatorToken && (((OperatorToken)lookahead).OperatorType == OperatorType.Assignment) || lookahead is StatementSperatorToken) //variable declaration
                             {
+                                if (lookahead is OperatorToken)
+                                    next(); //skip the "="
                                 scopes.Peek().AddStatement(new VariableDeclarationNode(varType, name.Content, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
                             }
                             else if (lookahead is OpenBraceToken && (((OpenBraceToken)lookahead).BraceType == BraceType.Round)) //function definition
@@ -93,7 +96,6 @@ namespace SimpleC.Parsing
                                 var @if = new IfStatementNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
                                 scopes.Peek().AddStatement(@if);
                                 scopes.Push(@if);
-
                                 break;
                             case KeywordType.While:
                                 var @while = new WhileLoopNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
@@ -104,6 +106,17 @@ namespace SimpleC.Parsing
                                 throw new ParsingException("Unexpected keyword type.");
                         }
                     }
+                }
+                else if(peek() is IdentifierToken && scopes.Count > 1) //in nested scope
+                {
+                    var name = readToken<IdentifierToken>();
+                    if(peek() is OperatorToken && ((OperatorToken)peek()).OperatorType == OperatorType.Assignment) //variable assignment
+                    {
+                        next(); //skip the "="
+                        scopes.Peek().AddStatement(new VariableAssingmentNode(name.Content, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                    }
+                    else //lone expression (incl. function calls!)
+                        scopes.Peek().AddStatement(ExpressionNode.CreateFromTokens(readUntilStatementSeperator()));
                 }
                 else if(peek() is CloseBraceToken)
                 {
@@ -137,12 +150,14 @@ namespace SimpleC.Parsing
             //TODO: Only allow round braces, handle nested braces!
             while (!eof() && !(peek() is CloseBraceToken))
                 yield return next();
+            next(); //skip the closing brace
         }
 
         private IEnumerable<Token> readUntilStatementSeperator()
         {
             while (!eof() && !(peek() is StatementSperatorToken))
                 yield return next();
+            next(); //skip the semicolon
         }
 
         private TExpected readToken<TExpected>() where TExpected : Token
@@ -153,12 +168,14 @@ namespace SimpleC.Parsing
                 throw new ParsingException("Unexpected token " + peek());
         }
 
+        [DebuggerStepThrough]
         private Token peek()
         {
             //TODO: Check for eof()
             return Tokens[readingPosition];
         }
 
+        [DebuggerStepThrough]
         private Token next()
         {
             var ret = peek();
@@ -166,6 +183,7 @@ namespace SimpleC.Parsing
             return ret;
         }
 
+        [DebuggerStepThrough]
         private bool eof()
         {
             return readingPosition >= Tokens.Length;

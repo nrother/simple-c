@@ -63,6 +63,7 @@
     <Compile Include="Types\AstNodes\ReturnStatementNode.cs" />
     <Compile Include="Types\AstNodes\StatementSequenceNode.cs" />
     <Compile Include="Types\AstNodes\UnaryOperationNode.cs" />
+    <Compile Include="Types\AstNodes\VariableAssingmentNode.cs" />
     <Compile Include="Types\AstNodes\VariableDeclarationNode.cs" />
     <Compile Include="Types\AstNodes\VariableReferenceExpressionNode.cs" />
     <Compile Include="Types\AstNodes\WhileLoopNode.cs" />
