@@ -55,12 +55,17 @@
     <Compile Include="Types\AstNodes\FunctionCallExpressionNode.cs" />
     <Compile Include="Types\AstNodes\FunctionDeclarationNode.cs" />
     <Compile Include="Types\AstNodes\ExpressionNode.cs" />
+    <Compile Include="Types\AstNodes\IfStatementNode.cs" />
+    <Compile Include="Types\AstNodes\LoopStatementNode.cs" />
     <Compile Include="Types\AstNodes\NumberLiteralNode.cs" />
+    <Compile Include="Types\AstNodes\ParameterDeclarationNode.cs" />
     <Compile Include="Types\AstNodes\ProgramNode.cs" />
+    <Compile Include="Types\AstNodes\ReturnStatementNode.cs" />
     <Compile Include="Types\AstNodes\StatementSequenceNode.cs" />
     <Compile Include="Types\AstNodes\UnaryOperationNode.cs" />
     <Compile Include="Types\AstNodes\VariableDeclarationNode.cs" />
     <Compile Include="Types\AstNodes\VariableReferenceExpressionNode.cs" />
+    <Compile Include="Types\AstNodes\WhileLoopNode.cs" />
     <Compile Include="Types\Tokens\BraceType.cs" />
     <Compile Include="Types\Tokens\KeywordType.cs" />
     <Compile Include="Types\Tokens\OperatorType.cs" />

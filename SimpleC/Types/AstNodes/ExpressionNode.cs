@@ -1,4 +1,4 @@
-﻿using SimpleC.Parsing;
+using SimpleC.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SimpleC.Types.AstNodes
 {
-    abstract class ExpressionNode
+    abstract class ExpressionNode : AstNode
     {
         protected ExpressionNode()
         { }

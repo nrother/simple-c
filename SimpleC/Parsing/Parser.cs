@@ -41,22 +41,39 @@ namespace SimpleC.Parsing
 
                     if (scopes.Count == 1) //we are a top level, the only valid keywords are variable types, starting a variable or function definition
                     {
-                        if (!keyword.IsTypeKeyword)
+                        if (keyword.IsTypeKeyword)
                         {
                             var varType = keyword.ToVariableType();
                             //it must be followed by a identifier:
                             var name = readToken<IdentifierToken>();
                             //so see what it is (function or variable):
-                            Token lookahed = peek();
-                            if (lookahed is OperatorToken && (((OperatorToken)lookahed).OperatorType == OperatorType.Assignment) || lookahed is StatementSperatorToken) //variable declaration
+                            Token lookahead = peek();
+                            if (lookahead is OperatorToken && (((OperatorToken)lookahead).OperatorType == OperatorType.Assignment) || lookahead is StatementSperatorToken) //variable declaration
                             {
-                                scopes.Peek().AddStatement(new VariableDeclarationNode(varType, name.Content ,ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                                scopes.Peek().AddStatement(new VariableDeclarationNode(varType, name.Content, ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
                             }
-                            else if (lookahed is OpenBraceToken && (((OpenBraceToken)lookahed).BraceType == BraceType.Round)) //function definition
+                            else if (lookahead is OpenBraceToken && (((OpenBraceToken)lookahead).BraceType == BraceType.Round)) //function definition
                             {
                                 var func = new FunctionDeclarationNode(name.Content);
                                 scopes.Peek().AddStatement(func); //add the function to the old (root) scope...
                                 scopes.Push(func); //...and set it a the new scope!
+                                //Read the argument list
+                                next(); //skip the opening brace
+                                lookahead = peek();
+                                while (!(lookahead is CloseBraceToken && ((CloseBraceToken)lookahead).BraceType == BraceType.Round)) //TODO: Refactor using readUntilClosingBrace?
+                                {
+                                    var argType = readToken<KeywordToken>();
+                                    if (!argType.IsTypeKeyword)
+                                        throw new ParsingException("Expected type keyword!");
+                                    var argName = readToken<IdentifierToken>();
+                                    func.AddParameter(new ParameterDeclarationNode(argType.ToVariableType(), argName.Content));
+                                    if (peek() is ArgSeperatorToken) //TODO: Does this allow (int a int b)-style functions? (No arg-seperator!)
+                                        next(); //skip the sperator
+                                }
+                                next(); //skip the closing brace
+                                var curlyBrace = readToken<OpenBraceToken>();
+                                if (curlyBrace.BraceType != BraceType.Curly)
+                                    throw new ParsingException("Wrong brace type found!");
                             }
                             else
                                 throw new Exception("The parser encountered an unexpected token.");
@@ -64,7 +81,39 @@ namespace SimpleC.Parsing
                         else
                             throw new ParsingException("Found non-type keyword on top level.");
                     }
-                } //TODO: More keywords, expression in functions!
+                    else //we are in a nested scope
+                    {
+                        //TODO: Allow Function-local variables!
+                        switch (keyword.KeywordType)
+                        {
+                            case KeywordType.Return:
+                                scopes.Peek().AddStatement(new ReturnStatementNode(ExpressionNode.CreateFromTokens(readUntilStatementSeperator())));
+                                break;
+                            case KeywordType.If:
+                                var @if = new IfStatementNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
+                                scopes.Peek().AddStatement(@if);
+                                scopes.Push(@if);
+
+                                break;
+                            case KeywordType.While:
+                                var @while = new WhileLoopNode(ExpressionNode.CreateFromTokens(readUntilClosingBrace()));
+                                scopes.Peek().AddStatement(@while);
+                                scopes.Push(@while);
+                                break;
+                            default:
+                                throw new ParsingException("Unexpected keyword type.");
+                        }
+                    }
+                }
+                else if(peek() is CloseBraceToken)
+                {
+                    var brace = readToken<CloseBraceToken>();
+                    if (brace.BraceType != BraceType.Curly)
+                        throw new ParsingException("Wrong brace type found!");
+                    scopes.Pop(); //Scope has been closed!
+                }
+                else
+                    throw new ParsingException("The parser ran into an unexpeted token.");
             }
 
             if (scopes.Count != 1)
@@ -85,6 +134,7 @@ namespace SimpleC.Parsing
 
         private IEnumerable<Token> readUntilClosingBrace()
         {
+            //TODO: Only allow round braces, handle nested braces!
             while (!eof() && !(peek() is CloseBraceToken))
                 yield return next();
         }

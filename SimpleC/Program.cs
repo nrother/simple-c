@@ -1,4 +1,5 @@
 ﻿using SimpleC.Lexing;
+using SimpleC.Parsing;
 using SimpleC.Types;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,10 @@ int a = 5;
 int main()
 {
     a = 6;
+    return a*2;
 }";
+
+            //lexing
 
             var lexer = new Tokenizer(code);
             var tokens = lexer.Tokenize();
@@ -27,6 +31,15 @@ int main()
             {
                 Console.WriteLine(token);
             }
+
+            Console.WriteLine();
+            Console.WriteLine();
+
+            //parsing
+            var parser = new Parser(tokens);
+            var ast = parser.ParseToAst();
+
+            //TODO: Dump tree
 
             Console.ReadKey(false);
         }
