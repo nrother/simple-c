@@ -41,7 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeGeneration\CodeEmitter.cs" />
     <Compile Include="EnumExtensions.cs" />
+    <Compile Include="Excecution\Excecutor.cs" />
+    <Compile Include="Excecution\InvalidOpCodeException.cs" />
     <Compile Include="Lexing\CharType.cs" />
     <Compile Include="Lexing\Tokenizer.cs" />
     <Compile Include="Types\AstNodes\BinaryOperationNode.cs" />
@@ -67,6 +70,8 @@
     <Compile Include="Types\AstNodes\VariableDeclarationNode.cs" />
     <Compile Include="Types\AstNodes\VariableReferenceExpressionNode.cs" />
     <Compile Include="Types\AstNodes\WhileLoopNode.cs" />
+    <Compile Include="Types\CodeInstruction.cs" />
+    <Compile Include="Types\OpCode.cs" />
     <Compile Include="Types\Tokens\BraceType.cs" />
     <Compile Include="Types\Tokens\KeywordType.cs" />
     <Compile Include="Types\Tokens\OperatorType.cs" />
